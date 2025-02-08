@@ -1,1 +1,1 @@
-# Gemini-Electron
+# Electron-Focus-Tracker-UI

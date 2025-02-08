@@ -1,7 +1,5 @@
 import elements from './elements.js';
 import settingsManager from '../settings/settings-manager.js';
-const fs = require('fs').promises;
-const path = require('path');
 
 /**
  * Updates UI to show disconnect button and hide connect button
@@ -128,93 +126,7 @@ export function setupEventListeners(agent) {
     try {
       await ensureAgentReady(agent);
       const text = elements.messageInput.value.trim();
-
-
-      /*** AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ***/
-      // Read all files in the directory
-      const dir = "./screenshots";
-      const files = await fs.readdir(dir);
-
-      // Filter for files matching "screenshot_{timestamp}"
-      // This regex assumes the file name starts with "screenshot_" followed by one or more digits.
-      const screenshotFiles = files.filter(file => /^screenshot_\d+/.test(file));
-
-      if (screenshotFiles.length === 0) {
-        console.log('No screenshot files found');
-      }
-
-      // Sort the files by their numeric timestamp in descending order (latest first)
-      screenshotFiles.sort((a, b) => {
-        // Extract the timestamp using regex
-        const timestampA = parseInt(a.match(/^screenshot_(\d+)/)[1], 10);
-        const timestampB = parseInt(b.match(/^screenshot_(\d+)/)[1], 10);
-        return timestampB - timestampA;
-      });
-
-      // The first file in the sorted list is the latest
-      const latestFile = screenshotFiles[0];
-      const filePathLatest = path.join(dir, latestFile);
-
-      // Read the file into a buffer
-      const fileBuffer = await fs.readFile(filePathLatest);
-
-      // Convert the buffer to a Base64-encoded string
-      const base64String = fileBuffer.toString('base64');
-
-
-      /*** AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ***/
-
-      // Read all files in the given directory
-      const sessionDir = "./";
-      const filesSession = await fs.readdir(sessionDir);
-
-      // Filter for files that start with "session_analysis_" and end with ".json"
-      const sessionFiles = filesSession.filter(
-        (file) => file.startsWith('session_analysis_') && file.endsWith('.json')
-      );
-
-      if (sessionFiles.length === 0) {
-        throw new Error('No session analysis files found in the directory.');
-      }
-
-      // Map each file to its full path
-      const fullPaths = sessionFiles.map((file) => path.join(sessionDir, file));
-
-      // Get stats (including modification time) for each file
-      const filesWithStats = await Promise.all(
-        fullPaths.map(async (file) => {
-          const stats = await fs.stat(file);
-          return { file, mtime: stats.mtime };
-        })
-      );
-
-      // Sort the files by modification time in descending order (latest first)
-      filesWithStats.sort((a, b) => b.mtime - a.mtime);
-
-      // The first element is the latest file
-      const latestFilePath = filesWithStats[0].file;
-      console.log('Latest file:', latestFilePath);
-
-      // Read the latest file's content
-      const fileContent = await fs.readFile(latestFilePath, 'utf8');
-
-      // Parse the JSON content
-      const sessionAnalysis = JSON.parse(fileContent);
-      /*** BBBBBBBBBBBBBBBBBBBBBBBBBBBBB ***/
-
-      // const filePath = './screenshots/screenshot_2025-02-08_12-29-46.png';
-      // const imageBuffer = await fs.readFile(filePath);
-      // // Convert the buffer to a base64 string
-      // const base64image = imageBuffer.toString('base64');
-      //
-      // // Await your sendImage function if it's asynchronous
-      // // await agent.sendImage(base64image);
-      console.log("SENDING")
-      console.log(`filePathLatest: ${filePathLatest}`)
-      // const message = text?.length > 0 ? text : 'Describe the image that I just sent you. There should be a red dot in the image. In which position of the screen it is?';
-      const message = `This is the left ratio: ${sessionAnalysis.left_ratio}, and this is the right ratio: ${sessionAnalysis.right_ratio}. If the left ratio is higher, please Tell me I am losing focus and I need to get back to work. But if right ratio is higher, please give me some compliment
-PLEASE JUST SAY THE THING. NO NEED  TO REPEAT THE INFORMATION THAT I JUST GAVE YOU`;
-      await agent.sendTextAndImage(message, base64String);
+      await agent.sendText(text);
       elements.messageInput.value = '';
     } catch (error) {
       console.error('Error sending message:', error);
@@ -228,18 +140,6 @@ PLEASE JUST SAY THE THING. NO NEED  TO REPEAT THE INFORMATION THAT I JUST GAVE Y
       sendMessage();
     }
   });
-
-
-  // New: Automatically call sendMessage() every 5 seconds.
-  // Note: Since there's no event object here, you don't need to call event.preventDefault().
-  setInterval(async () => {
-    try {
-      // Simply call sendMessage every 5000 milliseconds (5 seconds)
-      await sendMessage();
-    } catch (error) {
-      console.error('Error in automatic message sending:', error);
-    }
-  }, 45000);
 
   // Settings button click
   elements.settingsBtn.addEventListener('click', () => settingsManager.show());

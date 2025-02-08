@@ -17,34 +17,36 @@ toolManager.registerTool('googleSearch', new GoogleSearchTool());
 const chatManager = new ChatManager();
 
 const geminiAgent = new GeminiAgent({
-    url,
-    config,
-    deepgramApiKey,
-    modelSampleRate: MODEL_SAMPLE_RATE,
-    toolManager
+  url,
+  config,
+  deepgramApiKey,
+  modelSampleRate: MODEL_SAMPLE_RATE,
+  toolManager
 });
 
 // Handle chat-related events
 geminiAgent.on('transcription', (transcript) => {
-    chatManager.updateStreamingMessage(transcript);
+  chatManager.updateStreamingMessage(transcript);
 });
 
 geminiAgent.on('text_sent', (text) => {
-    chatManager.finalizeStreamingMessage();
-    chatManager.addUserMessage(text);
+  chatManager.finalizeStreamingMessage();
+  chatManager.addUserMessage(text);
 });
 
 geminiAgent.on('interrupted', () => {
-    chatManager.finalizeStreamingMessage();
-    if (!chatManager.lastUserMessageType) {
-        chatManager.addUserAudioMessage();
-    }
+  chatManager.finalizeStreamingMessage();
+  if (!chatManager.lastUserMessageType) {
+    chatManager.addUserAudioMessage();
+  }
 });
 
 geminiAgent.on('turn_complete', () => {
-    chatManager.finalizeStreamingMessage();
+  chatManager.finalizeStreamingMessage();
 });
 
 geminiAgent.connect();
+
+console.log("Gemini Agent initialized");
 
 setupEventListeners(geminiAgent);
