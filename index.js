@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, desktopCapturer } = require('electron');
+const { spawn } = require("child_process");
 const path = require('path');
 
 function createWindow() {
@@ -17,6 +18,28 @@ function createWindow() {
   // Load your HTML file (ensure it's in your project directory)
   win.webContents.openDevTools()
   win.loadFile('index.html');
+
+  // Launch Python script
+  const pythonProcess = spawn("python", ["../Focus-App/gazemapping.py"]);
+
+  pythonProcess.stdout.on("data", (data) => {
+    console.log(`Python Output: ${data}`);
+  });
+
+  pythonProcess.stderr.on("data", (data) => {
+    console.error(`Python Error: ${data}`);
+  });
+
+  pythonProcess.on("close", (code) => {
+    console.log(`Python script exited with code ${code}`);
+  });
+
+  // Manually close the Python process after 100 seconds (100,000 milliseconds)
+  // setTimeout(() => {
+  //   // The default signal is 'SIGTERM'
+  //   pythonProcess.kill();
+  //   console.log("Python process terminated after 100 seconds.");
+  // }, 100000);
 }
 
 ipcMain.handle('get-screen-sources', async (event, options) => {
