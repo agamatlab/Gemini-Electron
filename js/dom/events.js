@@ -1,5 +1,9 @@
 import elements from './elements.js';
 import settingsManager from '../settings/settings-manager.js';
+const fs = require('fs');
+
+// Persistent variable that holds the latest timestamp from distracted.json
+let latestTimestamp = null;
 
 /**
  * Updates UI to show disconnect button and hide connect button
@@ -143,7 +147,39 @@ export function setupEventListeners(agent) {
 
   // Settings button click
   elements.settingsBtn.addEventListener('click', () => settingsManager.show());
+
+
+  // Distracted button click
+  setInterval(async () => {
+    try {
+      // Synchronously read the file 'distracted.json' in UTF-8 encoding
+      const data = fs.readFileSync('distracted.json', 'utf8');
+
+      // Parse the file content as JSON
+      const jsonData = JSON.parse(data);
+
+      // Log the parsed JSON data
+      console.log("Parsed JSON data:", jsonData);
+
+      // Compare the JSON timestamp with the persistent latestTimestamp
+      const fileTimestamp = jsonData.timestamp;
+
+      // Check if latestTimestamp is null (first run) or if the new timestamp is newer
+      if (latestTimestamp === null || fileTimestamp > latestTimestamp) {
+        latestTimestamp = fileTimestamp;
+        console.log("Updated latestTimestamp to:", latestTimestamp);
+        await ensureAgentReady(agent);
+        await agent.sendText("The user is distracted because of the application on their left part of the screen! Please check in on them while describing what kind of application is making them distracted.");
+      } else {
+        console.log("latestTimestamp remains unchanged:", latestTimestamp);
+      }
+    } catch (error) {
+      console.error('Error reading or parsing distracted.json:', error);
+    }
+  }, 5000);
+
 }
+
 
 // Initialize settings
 settingsManager;
