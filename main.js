@@ -23,7 +23,7 @@
 // });
 // });
 
-const { app, BrowserWindow, ipcMain, desktopCapturer, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, globalShortcut, session } = require('electron');
 const { spawn } = require("child_process");
 const path = require('path');
 const { ExplainInfo } = require('./explaininfo.js');
@@ -46,16 +46,26 @@ function createWindow() {
   require("@electron/remote/main").enable(win.webContents);
   win.webContents.openDevTools()
   win.loadFile('index.html');
+  session.defaultSession.getUserAgent()
   globalShortcut.register("Control+Shift+J", async () => {
     console.log("Ctrl+Shift+J pressed");
     console.log(process.platform)
 
     if(process.platform == "darwin"){
-      let spawn = require("child_process").spawn;
-      await spawn("./simulate_keys.sh");
-      const explainer = new ExplainInfo();
-      // console.log("wtf is going on?")
-      explainer.explainThis();
+
+      const shellProcess = spawn('./simulate_keys.sh');
+      shellProcess.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`);
+      });
+
+      shellProcess.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
+      });
+      shellProcess.on('close', (code) => {
+        console.log(`Shell script exited with code ${code}`);
+        const explainer = new ExplainInfo();
+        explainer.explainThis();
+      })
     }
    
   })
