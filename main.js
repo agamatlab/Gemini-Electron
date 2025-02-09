@@ -53,19 +53,15 @@ function createWindow() {
 
     if(process.platform == "darwin"){
 
-      const shellProcess = spawn('./simulate_keys.sh');
-      shellProcess.stdout.on('data', (data) => {
-        console.log(`stdout: ${data}`);
-      });
-
-      shellProcess.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
-      });
-      shellProcess.on('close', (code) => {
-        console.log(`Shell script exited with code ${code}`);
+      const exec = require('child_process').exec;
+      let millisecondsToWait = 200;
+      
+      exec('echo \'tell application \"System Events\" to keystroke \"c\" using command down\' | osascript');
+      setTimeout(function() {
+        // Whatever you want to do after the wait
         const explainer = new ExplainInfo();
-        explainer.explainThis();
-      })
+      explainer.explainThis();
+    }, millisecondsToWait);
     }
    
   })
