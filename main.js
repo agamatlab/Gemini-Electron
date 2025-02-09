@@ -50,31 +50,17 @@ function createWindow() {
     console.log("Ctrl+Shift+J pressed");
     console.log(process.platform)
 
-    if(process.platform == "darwin"){
+    if (process.platform == "darwin") {
       let spawn = require("child_process").spawn;
       await spawn("./simulate_keys.sh");
       const explainer = new ExplainInfo();
       // console.log("wtf is going on?")
       explainer.explainThis();
     }
-   
+
   })
 
 
-  // Launch Python script
-  // const pythonProcess = spawn("python", ["../Focus-App/gazemapping.py"]);
-  //
-  // pythonProcess.stdout.on("data", (data) => {
-  //   console.log(`Python Output: ${data}`);
-  // });
-  //
-  // pythonProcess.stderr.on("data", (data) => {
-  //   console.error(`Python Error: ${data}`);
-  // });
-  //
-  // pythonProcess.on("close", (code) => {
-  //   console.log(`Python script exited with code ${code}`);
-  // });
 
   // Manually close the Python process after 100 seconds (100,000 milliseconds)
   // setTimeout(() => {
@@ -112,3 +98,24 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+setInterval(async () => {
+  try {
+    // Launch Python script
+    const pythonProcess = spawn("python", ["../Focus-App/gazemapping.py"]);
+
+    pythonProcess.stdout.on("data", (data) => {
+      console.log(`Python Output: ${data}`);
+    });
+
+    pythonProcess.stderr.on("data", (data) => {
+      console.error(`Python Error: ${data}`);
+    });
+
+    pythonProcess.on("close", (code) => {
+      console.log(`Python script exited with code ${code}`);
+    });
+  } catch (error) {
+    console.error('Error in automatic message sending:', error);
+  }
+}, 10000);
