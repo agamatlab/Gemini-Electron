@@ -23,9 +23,11 @@
 // });
 // });
 
-const { app, BrowserWindow, ipcMain, desktopCapturer } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, globalShortcut } = require('electron');
 const { spawn } = require("child_process");
 const path = require('path');
+const { ExplainInfo } = require('./explaininfo.js');
+require('@electron/remote/main').initialize();
 
 function createWindow() {
   // Log the Electron module and check desktopCapturer in the main process
@@ -41,8 +43,23 @@ function createWindow() {
     }
   });
   // Load your HTML file (ensure it's in your project directory)
+  require("@electron/remote/main").enable(win.webContents);
   win.webContents.openDevTools()
   win.loadFile('index.html');
+  globalShortcut.register("Control+Shift+J", async () => {
+    console.log("Ctrl+Shift+J pressed");
+    console.log(process.platform)
+
+    if(process.platform == "darwin"){
+      let spawn = require("child_process").spawn;
+      await spawn("./simulate_keys.sh");
+      const explainer = new ExplainInfo();
+      // console.log("wtf is going on?")
+      explainer.explainThis();
+    }
+   
+  })
+
 
   // Launch Python script
   // const pythonProcess = spawn("python", ["../Focus-App/gazemapping.py"]);
@@ -76,6 +93,10 @@ ipcMain.handle('get-screen-sources', async (event, options) => {
     return [];
   }
 });
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
+  console.log("Shortcuts unregistered.");
+});
 
 app.whenReady().then(createWindow);
 
@@ -83,6 +104,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+  globalShortcut.unregisterAll();
 });
 
 app.on('activate', () => {
